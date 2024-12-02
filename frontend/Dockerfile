@@ -6,7 +6,7 @@ FROM node:20-alpine as build
 WORKDIR /app/frontend
 
 # copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+COPY ./package*.json ./
 
 # install dependencies
 RUN npm install
@@ -22,7 +22,7 @@ RUN npm run build
 
 # Stage 2: serve the frontend with nginx
 
-FROM  nginx:alpine 
+FROM nginx:alpine 
 
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 
