@@ -1,13 +1,13 @@
 services:
   frontend: 
     build:
-      context: ./Dockerfile
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: frontend
     env_file:
       - ./frontend/.env
     ports:
-      - "5173:80"
+      - "5173:5173"
     networks:
       - fastapi-network
     depends_on:
@@ -22,11 +22,6 @@ services:
       - ./backend/.env
     ports:
       - "8000:8000"
-    environment:
-      - POSTGRES_SERVER=db
-      - POSTGRES_DB=app
-      - POSTGRES_USER=app
-      - POSTGRES_PASSWORD=changethis123
     networks:
       - fastapi-network
     depends_on:
@@ -35,19 +30,51 @@ services:
   db: 
     image: postgres:13
     container_name: db
-    env_file:
-      - ./backend/.env
+    secrets:
+      - postgres_password
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
     ports:
       - "5432:5432"
     volumes:
       - postrgres_data:/var/lib/postgresql/data
     networks:
       - fastapi-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -p 5432"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    ports:
+      - "9080:8080"
+    networks:
+      - fastapi-network
+    depends_on:
+      - db
+
+  nginx-proxy:
+    image: jc21/nginx-proxy-manager
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    networks:
+      - fastapi-network
+    volumes:
+      - nginx-proxy-data:/data
+      - nginx-proxy-letsencrypt:/etc/letsencrypt
+    depends_on:
+      - frontend
+      - backend
 
 networks:
   fastapi-network:
@@ -55,3 +82,9 @@ networks:
 
 volumes:
   postrgres_data:
+  nginx-proxy-data:
+  nginx-proxy-letsencrypt:
+
+secrets:
+  postgres_password:
+    file: ./postgres_secret.txt
