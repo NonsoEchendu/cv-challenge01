@@ -1,3 +1,6 @@
+include:
+  - ./monitoring/docker-compose.yaml
+
 services:
   frontend: 
     build:
