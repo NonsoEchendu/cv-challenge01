@@ -6,22 +6,19 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl \
+    build-essential libpq-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
 #Install Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy the Poetry files
-COPY pyproject.toml poetry.lock ./
+# Copy the Application code
+COPY . .
 
 # Install Python dependencies using Poetry
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --only main
-
-# Copy the application code
-COPY . .
+    && poetry install --no-interaction --no-ansi
 
 # Make the prestart script executable
 RUN chmod +x /app/prestart.sh
