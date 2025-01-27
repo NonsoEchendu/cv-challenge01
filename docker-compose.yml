@@ -1,0 +1,58 @@
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - cv-challenge-network
+      
+  backend: 
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    depends_on: 
+      db:
+        condition: service_healthy
+    networks:
+      - cv-challenge-network
+    
+  db:
+    image: postgres:13
+    container_name: db
+    env_file:
+      - ./backend/.env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]  # Check database readiness
+      interval: 10s       # Check every 10 seconds
+      timeout: 5s         # Timeout after 5 seconds
+      retries: 5          # Retry up to 5 times before marking as unhealthy
+    restart: unless-stopped
+    networks:
+      - cv-challenge-network
+
+networks:
+  cv-challenge-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+
+
