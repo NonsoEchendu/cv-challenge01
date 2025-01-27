@@ -48,11 +48,41 @@ services:
     networks:
       - cv-challenge-network
 
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - cv-challenge-network
+    depends_on:
+      - db
+
+  npm: 
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'  # Admin UI
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - cv-challenge-network
+    depends_on:
+      - frontend
+      - backend
+      - db
+      - adminer
+
 networks:
   cv-challenge-network:
     driver: bridge
 
 volumes:
   postgres-data:
-
-
+  npm_data:
+  npm_letsencrypt:
