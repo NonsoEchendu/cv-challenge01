@@ -10,10 +10,10 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy rest of  application code
 COPY . .
 
-# Expose the port Vite uses (default is 5173)
+# Expose the port Vite uses
 EXPOSE 5173
 
 # Start the Vite development server
